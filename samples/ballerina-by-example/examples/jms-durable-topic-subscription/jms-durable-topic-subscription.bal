@@ -8,7 +8,7 @@ endpoint jms:ConsumerEndpoint ep1 {
 
 @jms:ServiceConfig {
     destination: "MyTopic",
-    destinationType: "topic",
+    destinationType: "topic", // Can be of type topic or queue (default).
     subscriptionId: "myqSub-1"
 }
 service<jms:Service> jmsService bind ep1 {

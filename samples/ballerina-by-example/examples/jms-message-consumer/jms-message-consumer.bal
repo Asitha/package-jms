@@ -7,7 +7,7 @@ endpoint jms:ConsumerEndpoint ep1 {
 };
 
 @jms:ServiceConfig {
-    destination: "testQueue"
+    destination: "testQueue" // if this value is not set consumer defaults to destination jmsService.
 }
 service<jms:Service> jmsService bind ep1 {
 

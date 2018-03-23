@@ -1,18 +1,21 @@
 import ballerina/net.jms;
+import ballerina/io;
 
-@jms:configuration {
+endpoint jms:ConsumerEndpoint ep1 {
+    initialContextFactory: "wso2mbInitialContextFactory",
+    providerUrl: "amqp://admin:admin@carbon/carbon?brokerlist='tcp://localhost:5672'"
+};
+
+endpoint jms:ClientEndpoint clientEP {
     initialContextFactory:"wso2mbInitialContextFactory",
-    providerUrl:
-    "amqp://admin:admin@carbon/carbon?brokerlist='tcp://localhost:5672'",
-    connectionFactoryType:"queue",
-    connectionFactoryName:"QueueConnectionFactory",
-    destination:"MyQueue"
+    providerUrl: "amqp://admin:admin@carbon/carbon?brokerlist='tcp://localhost:5672'"
+};
+
+@jms:ServiceConfig {
+    destination: "MyQueue" // if this value is not set consumer defaults to destination jmsService.
 }
-service<jms> jmsService {
-    resource onMessage (jms:JMSMessage m) {
-        endpoint<jms:JmsClient> jmsEP {
-             create jms:JmsClient (getConnectorConfig());
-        }
+service<jms> jmsService bind ep1 {
+    onMessage (endpoint client, jms:Message m) {
 
         // Read all the supported headers from the message.
         string correlationId = m.getCorrelationID();
@@ -25,33 +28,23 @@ service<jms> jmsService {
         int deliveryMode = m.getDeliveryMode();
 
         // Print the header values.
-        println("correlationId : " + correlationId);
-        println("timestamp : " + timestamp);
-        println("message type : " + messageType);
-        println("message id : " + messageId);
-        println("is redelivered : " + redelivered);
-        println("expiration time : " + expirationTime);
-        println("priority : " + priority);
-        println("delivery mode : " + deliveryMode);
-        println("----------------------------------");
+        io:println("correlationId : " + correlationId);
+        io:println("timestamp : " + timestamp);
+        io:println("message type : " + messageType);
+        io:println("message id : " + messageId);
+        io:println("is redelivered : " + redelivered);
+        io:println("expiration time : " + expirationTime);
+        io:println("priority : " + priority);
+        io:println("delivery mode : " + deliveryMode);
+        io:println("----------------------------------");
 
-        jms:JMSMessage responseMessage = jms:createTextMessage(getConnectorConfig());
+        jms:Message responseMessage = jms:createTextMessage("{\"name\": \"Ballerina\"}");
 
         responseMessage.setCorrelationID("response-001");
         responseMessage.setPriority(8);
         responseMessage.setDeliveryMode(1);
-        responseMessage.setTextMessageContent("{\"WSO2\":\"Ballerina\"}");
         responseMessage.setType("application/json");
 
-        jmsEP.send("MySecondQueue", responseMessage);
+        clientEP -> send("MySecondQueue", responseMessage);
     }
-}
-
-function getConnectorConfig () (jms:ClientProperties) {
-    jms:ClientProperties properties = {
-                                          initialContextFactory:"wso2mbInitialContextFactory",
-                                          configFilePath:"../jndi.properties",
-                                          connectionFactoryName:"QueueConnectionFactory",
-                                          connectionFactoryType:"queue"};
-    return properties;
 }

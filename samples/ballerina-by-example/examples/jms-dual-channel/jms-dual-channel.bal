@@ -15,7 +15,7 @@ service<http> helloService  {
         methods:["POST"],
         path:"/sayHello"
     }
-    resource sayHello (http:Request httpReq, http:Response httpRes) {
+    sayHello (http:Request httpReq, http:Response httpRes) {
 
         string requestQueueName = "RequestQueue";
         string responseQueueName = "ResponseQueue";
